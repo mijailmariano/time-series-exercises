@@ -19,29 +19,43 @@ from sklearn.impute import IterativeImputer
 def get_sales_df():
     filename = "merged_sales.csv"
     if os.path.isfile(filename):
-        return pd.read_csv(filename)
+        df = pd.read_csv(filename)
+
+        # let's print the shape
+        print(f'df shape: {df.shape}')
+
+        return df
 
 
 '''function for cleaning the sales dataframe'''
 def clean_sales_df(df):
 
-     # convert the sale date to proper DateTime
-     df["sale_date"] = pd.to_datetime(df["sale_date"], infer_datetime_format=True)
+    # dropiing unneeded upc columns
+    df = df.drop(columns = ["item_upc12", "item_upc14"])
 
-     # setting date to index
-     df = df.set_index("sale_date")
+    # convert the sale date to proper DateTime
+    df["sale_date"] = pd.to_datetime(df["sale_date"], infer_datetime_format=True)
+
+    # updating column data types
+    df[["item", "store", "store_zipcode"]] = df[["item", "store", "store_zipcode"]].astype(str)
+
+    # setting date to index
+    df = df.set_index("sale_date").rename_axis(None).sort_index()
 
     # isolating and creating a month and day of the week column 
-     df["month"] = df.index.strftime("%B")
+    df["month"] = df.index.strftime("%B")
 
     # creating a day of the week column
-     df["month_and_day"] = df.index.strftime("%A")
-    
-     # creating a "sales total" column 
-     df["sales_total"] = df["sale_amount"] * df["item_price"]
+    df["month_and_day"] = df.index.strftime("%A")
 
-     # return the cleaned* df
-     return df
+    # creating a "sales total" column 
+    df["total_sales"] = df["sale_amount"] * df["item_price"]
+
+    # let's print the shape
+    print(f'df shape: {df.shape}')
+
+    # return the cleaned* df
+    return df
 
 
 '''function for retrieving the merged sales dataframe'''
@@ -58,7 +72,7 @@ def clean_energy_df(df):
     df["Date"] = pd.to_datetime(df["Date"], infer_datetime_format=True)
 
     # setting the date column as index
-    df = df.set_index("Date")
+    df = df.set_index("Date").sort_index()
 
     # adding a year column to the df
     df["year"] = df.index.strftime("%Y")
